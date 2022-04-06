@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Car;
 use App\Models\Property;
 use App\Models\Scraper;
 use App\Models\User;
@@ -13,81 +14,7 @@ class ScraperController extends Controller
 
     public function index()
     {
-        // $client = new Client();
 
-        // $website = $client->request('GET', 'https://www.propertyfinder.ae/en/buy/properties-for-sale.html?page=10');
-
-
-        // $dataArray = (object)[];
-        // $website->filter('.gallery__item > img')->each(function ($node) use ($dataArray) {
-        //     $dataArray->property_images[] = $node->attr('src');
-        // });
-
-        // $website->filter('a.card--clickable')->each(function ($node) use ($dataArray) {
-        //     $dataArray->slug[] = 'https://www.propertyfinder.ae' . $node->attr('href');
-        // });
-
-        // $website->filter('.card__header ')->each(function ($node) use ($dataArray) {
-        //     $node->children()->each(function ($child) use ($dataArray) {
-        //         if ($child->matches('.card__price-area ')) {
-        //             $dataArray->price[] = $child->text();
-        //         }
-        //         if ($child->matches('.card__title')) {
-        //             $dataArray->title[] = $child->text();
-        //         }
-        //         if ($child->matches('.card__location > .card__location-text')) {
-        //             $dataArray->location[] = $child->text();
-        //         }
-        //     });
-        // });
-
-        // $website->filter('.card__info > .card__info-content > .card__property-amenities')->each(function ($node) use ($dataArray) {
-        //     $node->children()->each(function ($child) use ($dataArray) {
-        //         if ($child->matches('.card__property-amenity--property-type')) {
-        //             $dataArray->property_type[] = $child->text();
-        //         }
-        //         if ($child->matches('.card__property-amenity--bedrooms')) {
-        //             $dataArray->bedrooms[] = $child->text();
-        //         }
-        //         if ($child->matches('.card__property-amenity--bathrooms')) {
-        //             $dataArray->bathrooms[] = $child->text();
-        //         }
-        //         if ($child->matches('.card__property-amenity--area')) {
-        //             $dataArray->area[] = $child->text();
-        //         }
-        //     });
-        // });
-
-
-        // $website->filter('.card__content-extra')->each(function ($node) use ($dataArray) {
-        //     $node->children()->each(function ($child) use ($dataArray) {
-        //         if ($child->matches('.card__tag--top-corner')) {
-        //             $dataArray->property_tag[] = $child->text();
-        //         }
-        //     });
-        // });
-
-        // $website->filter('img.card__broker-img')->each(function ($node) use ($dataArray) {
-        //     $dataArray->brocker_image[] = $node->attr('src');
-        // });
-
-        // foreach ($dataArray->title as $key => $title) {
-        //     Property::firstOrCreate([
-        //         'title' => $title,
-        //         'price' => $dataArray->price[$key],
-        //         'slug' => $dataArray->slug[$key],
-        //         'location' => $dataArray->location[$key],
-        //         'property_type' => $dataArray->property_type[$key],
-        //         'bedrooms' => isset($dataArray->bedrooms[$key]) ? $dataArray->bedrooms[$key] : '',
-        //         'bathrooms' => isset($dataArray->bathrooms[$key]) ? $dataArray->bathrooms[$key] : '',
-        //         'area' => isset($dataArray->area[$key]) ? $dataArray->area[$key] : '',
-        //         'property_tag' => isset($dataArray->property_tag[$key]) ? $dataArray->property_tag[$key] : '',
-        //         'brocker_image' => $dataArray->brocker_image[$key],
-        //         'sale_type' => 'Buy',
-        //     ]);
-        // }
-        // return 'true';
-        return Property::where('property_references', null)->count();
 
         return view('scraper');
     }
@@ -99,79 +26,37 @@ class ScraperController extends Controller
 
         $website = $client->request('GET', $request->url);
 
-
         $dataArray = (object)[];
-        $website->filter('.gallery__item > img')->each(function ($node) use ($dataArray) {
-            $dataArray->property_images[] = $node->attr('src');
+        $website->filter('.card__img > img')->each(function ($node) use ($dataArray) {
+            $dataArray->image[] = $node->attr('src');
         });
 
-        $website->filter('a.card--clickable')->each(function ($node) use ($dataArray) {
-            $dataArray->slug[] = 'https://www.propertyfinder.ae' . $node->attr('href');
+        $website->filter('.card__inner > a')->each(function ($node) use ($dataArray) {
+            $dataArray->detail_page[] = 'https://tmcars.info/' . $node->attr('href');
         });
 
-        $website->filter('.card__header ')->each(function ($node) use ($dataArray) {
-            $node->children()->each(function ($child) use ($dataArray) {
-                if ($child->matches('.card__price-area ')) {
-                    $dataArray->price[] = $child->text();
-                }
-                if ($child->matches('.card__title')) {
-                    $dataArray->title[] = $child->text();
-                }
-                if ($child->matches('.card__location > .card__location-text')) {
-                    $dataArray->location[] = $child->text();
-                }
-            });
+        $website->filter('.card__title')->each(function ($node) use ($dataArray) {
+            $dataArray->title[] = $node->text();
         });
 
-        $website->filter('.card__info > .card__info-content > .card__property-amenities')->each(function ($node) use ($dataArray) {
-            $node->children()->each(function ($child) use ($dataArray) {
-                if ($child->matches('.card__property-amenity--property-type')) {
-                    $dataArray->property_type[] = $child->text();
-                }
-                if ($child->matches('.card__property-amenity--bedrooms')) {
-                    $dataArray->bedrooms[] = $child->text();
-                }
-                if ($child->matches('.card__property-amenity--bathrooms')) {
-                    $dataArray->bathrooms[] = $child->text();
-                }
-                if ($child->matches('.card__property-amenity--area')) {
-                    $dataArray->area[] = $child->text();
-                }
-            });
+        $website->filter('.card__price-number')->each(function ($node) use ($dataArray) {
+            $price = $node->text();
+            $dataArray->price[] = str_replace(' TMT', '', $price);
         });
 
-
-        $website->filter('.card__content-extra')->each(function ($node) use ($dataArray) {
-            $node->children()->each(function ($child) use ($dataArray) {
-                if ($child->matches('.card__tag--top-corner')) {
-                    $dataArray->property_tag[] = $child->text();
-                }
-            });
-        });
-
-        $website->filter('img.card__broker-img')->each(function ($node) use ($dataArray) {
-            $dataArray->brocker_image[] = $node->attr('src');
-        });
 
         foreach ($dataArray->title as $key => $title) {
-            $checkSlug = Property::where('slug', $dataArray->slug[$key])->first();
+            $checkSlug = Car::where('detail_page', $dataArray->detail_page[$key])->first();
             if (is_null($checkSlug)) {
-                Property::Create([
-                    'title' => $title,
-                    'price' => $dataArray->price[$key],
-                    'slug' => $dataArray->slug[$key],
-                    'location' => $dataArray->location[$key],
-                    'property_type' => $dataArray->property_type[$key],
-                    'bedrooms' => isset($dataArray->bedrooms[$key]) ? $dataArray->bedrooms[$key] : '',
-                    'bathrooms' => isset($dataArray->bathrooms[$key]) ? $dataArray->bathrooms[$key] : '',
-                    'area' => isset($dataArray->area[$key]) ? $dataArray->area[$key] : '',
-                    'property_tag' => isset($dataArray->property_tag[$key]) ? $dataArray->property_tag[$key] : '',
-                    'brocker_image' => $dataArray->brocker_image[$key],
-                    'sale_type' => 'Commercial',
+                Car::Create([
+                    'title' => $dataArray->title[$key],
+                    'image' => $dataArray->image[$key],
+                    'detail_page' => $dataArray->detail_page[$key],
+                    'price' => $dataArray->price[$key]
                 ]);
             }
         }
-        // return $dataArray;
+
 
         return 'true';
     }
