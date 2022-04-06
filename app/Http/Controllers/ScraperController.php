@@ -46,15 +46,15 @@ class ScraperController extends Controller
 
 
         foreach ($dataArray->title as $key => $title) {
-            $checkSlug = Car::where('detail_page', $dataArray->detail_page[$key])->first();
-            if (is_null($checkSlug)) {
-                Car::Create([
-                    'title' => $dataArray->title[$key],
-                    'image' => $dataArray->image[$key],
-                    'detail_page' => $dataArray->detail_page[$key],
-                    'price' => $dataArray->price[$key]
-                ]);
-            }
+            // $checkSlug = Car::where('detail_page', $dataArray->detail_page[$key])->first();
+            // if (is_null($checkSlug)) {
+            Car::Create([
+                'title' => $dataArray->title[$key],
+                'image' => $dataArray->image[$key],
+                'detail_page' => $dataArray->detail_page[$key],
+                'price' => $dataArray->price[$key]
+            ]);
+            // }
         }
 
 
